@@ -1,70 +1,84 @@
 "use strict";
 
-function animate(callback){
-  console.log(`callback: ${callback}`);
-  out("t2", "true");
-  var canvas = document.getElementById("canvas1");
-  var impl_state = state();
-  animate_({animation: {lastFrame: 0,
-                        ellapsed: 0,
-                        ellapsedMillis: 0,
-                        framesPerSecond: 30},
-            canvas: canvas,
-            context: canvas.getContext("2d"),
-            user: impl_state,
-            callback: callback
-          });
-}
+let animation = {
+  isCancelled: false,
 
-function animationFrameCallback(state){
-  return function(ellapsed){
-           var newState = clone(state);
-           newState.animation.ellapsed = ellapsed;
-           animate_(newState);
-         }
-}
+  cancel:
+    function (){
+      animation.isCancelled = true;
+    },
 
-function animate_(state){
-  var anim = state.animation;
-  var millisPerFrame = 1000 / anim.framesPerSecond;
-  var ellapsedMillis = Math.floor(anim.ellapsed);
-  anim.frame = Math.floor(ellapsedMillis / millisPerFrame);
-  anim.ellapsedFrames = anim.frame - anim.lastFrame;
+  animate:
+    function (state, renderFun){
+      animation.isCancelled = false;
+      out("t2", "true");
+      var canvas = document.getElementById("canvas1");
+      animation.animate_({animation: {lastFrame: 0,
+                                      ellapsed: 0,
+                                      ellapsedMillis: 0,
+                                      framesPerSecond: 30},
+                          render: renderFun,
+                          canvas: canvas,
+                          context: canvas.getContext("2d"),
+                          user: state
+                        });
+    },
 
-  if(anim.ellapsedFrames == 0){
-    out("t6", "skipping at " + anim.frame + " because 0 frames have ellapsed.");
-    requestAnimationFrame(animationFrameCallback(state));
-    return 0;
-  }
-  anim.lastFrame = anim.frame;
+  animation_frame_callback:
+    function (userState, state){
+      return function(ellapsed){
+               var newState = clone(state);
+               newState.animation.ellapsed = ellapsed;
+               newState.user = userState;
+               animation.animate_(newState);
+             }
+    },
 
-  if(anim.frame > 500){
-    return 0;
-  }
+  animate_:
+    function (state){
+      var anim = state.animation;
+      var millisPerFrame = 1000 / anim.framesPerSecond;
+      var ellapsedMillis = Math.floor(anim.ellapsed);
+      anim.frame = Math.floor(ellapsedMillis / millisPerFrame);
+      anim.ellapsedFrames = anim.frame - anim.lastFrame;
 
-  out("t3", "frame: " + anim.frame);
-  if(anim.ellapsedFrames != 1){
-    out("t4", "at frame " + anim.frame + " ellapsed frames was " + anim.ellapsedFrames);
-    out("t5", "lastFrame: " + anim.lastFrame);
-  }
+      if(anim.ellapsedFrames == 0){
+        out("t6", "skipping at " + anim.frame + " because 0 frames have ellapsed.");
+        window.requestAnimationFrame(animation.animation_frame_callback(state.user, state));
+        return 0;
+      }
+      anim.lastFrame = anim.frame;
 
-  clear();
-  state.animation = anim;
-  if(state.callback()){
-    requestAnimationFrame(animationFrameCallback(render(state)));
-  }
-}
+      if(anim.frame > 500){
+        return 0;
+      }
 
-function clear(){
-  var c = document.getElementById("canvas1");
-  var ctx = c.getContext("2d");
-  var h = c.height;
-  var w = c.width;
-  clear_(ctx, w, h);
-  ctx.clearRect(0, 0, h, w);
-  ctx.strokeStyle = "#F00";
-}
+      out("t3", "frame: " + anim.frame);
+      if(anim.ellapsedFrames != 1){
+        out("t4", "at frame " + anim.frame + " ellapsed frames was " + anim.ellapsedFrames);
+        out("t5", "lastFrame: " + anim.lastFrame);
+      }
 
-function clear_(ctx, h, w){
-  ctx.clearRect(0, 0, h, w);
+      animation.clear();
+      state.animation = anim;
+      if(!animation.isCancelled){
+        window.requestAnimationFrame(animation.animation_frame_callback(state.render(state.user), state));
+      }
+    },
+
+  clear:
+    function (){
+      var c = document.getElementById("canvas1");
+      var ctx = c.getContext("2d");
+      var h = c.height;
+      var w = c.width;
+      animation.clear_(ctx, w, h);
+      ctx.clearRect(0, 0, h, w);
+      ctx.strokeStyle = "#F00";
+    },
+
+  clear_:
+    function clear_(ctx, h, w){
+      ctx.clearRect(0, 0, h, w);
+    }
 }
