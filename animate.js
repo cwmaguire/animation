@@ -53,10 +53,6 @@ let animation = {
       anim.lastFrame = anim.frame;
 
       if(anim.frame > 50){
-        console.log("Animation stopped: anim.frame: " + anim.frame);
-        for(let field in anim){
-          console.log(`${field}: ${anim[field]}`);
-        }
         return 0;
       }
 
@@ -69,7 +65,13 @@ let animation = {
       animation.clear();
       state.animation = anim;
       if(!animation.isCancelled){
-        window.requestAnimationFrame(animation.animation_frame_callback(state.render(state.user), state));
+        let paramObj = {canvas: state.canvas,
+                        context: state.context,
+                        state: state.user};
+        window.requestAnimationFrame(
+          animation.animation_frame_callback(
+            state.render(paramObj),
+            state));
       }
     },
 
