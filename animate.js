@@ -1,6 +1,7 @@
 "use strict";
 
-function animate(){
+function animate(callback){
+  console.log(`callback: ${callback}`);
   out("t2", "true");
   var canvas = document.getElementById("canvas1");
   var impl_state = state();
@@ -10,7 +11,9 @@ function animate(){
                         framesPerSecond: 30},
             canvas: canvas,
             context: canvas.getContext("2d"),
-            user: impl_state});
+            user: impl_state,
+            callback: callback
+          });
 }
 
 function animationFrameCallback(state){
@@ -47,7 +50,9 @@ function animate_(state){
 
   clear();
   state.animation = anim;
-  requestAnimationFrame(animationFrameCallback(render(state)));
+  if(state.callback()){
+    requestAnimationFrame(animationFrameCallback(render(state)));
+  }
 }
 
 function clear(){
