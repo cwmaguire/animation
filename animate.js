@@ -11,12 +11,12 @@ let animation = {
   animate:
     function (state, renderFun){
       animation.isCancelled = false;
-      out("t2", "true");
-      var canvas = document.getElementById("canvas1");
+      let canvas = document.getElementById("canvas1");
       animation.animate_({animation: {lastFrame: 0,
                                       ellapsed: 0,
                                       ellapsedMillis: 0,
-                                      framesPerSecond: 30},
+                                      framesPerSecond: 30,
+                                      first_ellapsed: undefined},
                           render: renderFun,
                           canvas: canvas,
                           context: canvas.getContext("2d"),
@@ -27,8 +27,11 @@ let animation = {
   animation_frame_callback:
     function (userState, state){
       return function(ellapsed){
-               var newState = clone(state);
+               let newState = clone(state);
                newState.animation.ellapsed = ellapsed;
+               if(!state.animation.first_ellapsed){
+                 newState.animation.first_ellapsed = ellapsed;
+               }
                newState.user = userState;
                animation.animate_(newState);
              }
@@ -36,9 +39,9 @@ let animation = {
 
   animate_:
     function (state){
-      var anim = state.animation;
-      var millisPerFrame = 1000 / anim.framesPerSecond;
-      var ellapsedMillis = Math.floor(anim.ellapsed);
+      let anim = state.animation;
+      let millisPerFrame = 1000 / anim.framesPerSecond;
+      let ellapsedMillis = Math.floor(anim.ellapsed - anim.first_ellapsed);
       anim.frame = Math.floor(ellapsedMillis / millisPerFrame);
       anim.ellapsedFrames = anim.frame - anim.lastFrame;
 
@@ -49,7 +52,11 @@ let animation = {
       }
       anim.lastFrame = anim.frame;
 
-      if(anim.frame > 500){
+      if(anim.frame > 50){
+        console.log("Animation stopped: anim.frame: " + anim.frame);
+        for(let field in anim){
+          console.log(`${field}: ${anim[field]}`);
+        }
         return 0;
       }
 
@@ -68,10 +75,10 @@ let animation = {
 
   clear:
     function (){
-      var c = document.getElementById("canvas1");
-      var ctx = c.getContext("2d");
-      var h = c.height;
-      var w = c.width;
+      let c = document.getElementById("canvas1");
+      let ctx = c.getContext("2d");
+      let h = c.height;
+      let w = c.width;
       animation.clear_(ctx, w, h);
       ctx.clearRect(0, 0, h, w);
       ctx.strokeStyle = "#F00";
