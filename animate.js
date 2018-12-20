@@ -1,16 +1,20 @@
 "use strict";
 
 let animation = {
-  isCancelled: false,
+  current: undefined,
 
   cancel:
     function (){
-      animation.isCancelled = true;
+      animation.current = undefined;
     },
 
   animate:
-    function (state, renderFun){
-      animation.isCancelled = false;
+    function (state, renderFun, limit){
+      //for(let p in state){
+        //console.log(`animate: state[${p}]: ${state[p]}`);
+      //}
+      let id = Symbol();
+      animation.current = id;
       let canvas = document.getElementById("canvas1");
       animation.animate_({animation: {lastFrame: 0,
                                       ellapsed: 0,
@@ -20,12 +24,20 @@ let animation = {
                           render: renderFun,
                           canvas: canvas,
                           context: canvas.getContext("2d"),
-                          user: state
-                        });
+                          user: state,
+                          id: id
+                         },
+                         limit);
     },
 
   animation_frame_callback:
-    function (userState, state){
+    function (userState, state, limit){
+      if(animation.current != state.id){
+        return 0;
+      }
+      //for(let p in userState){
+        //console.log(`animation_frame_callback: userState[${p}]: ${userState[p]}`);
+      //}
       return function(ellapsed){
                let newState = clone(state);
                newState.animation.ellapsed = ellapsed;
@@ -33,12 +45,15 @@ let animation = {
                  newState.animation.first_ellapsed = ellapsed;
                }
                newState.user = userState;
-               animation.animate_(newState);
+               animation.animate_(newState, limit);
              }
     },
 
   animate_:
-    function (state){
+    function (state, limit){
+      //for(let p in state.user){
+        //console.log(`animate_: state.user[${p}]: ${state.user[p]}`);
+      //}
       let anim = state.animation;
       let millisPerFrame = 1000 / anim.framesPerSecond;
       let ellapsedMillis = Math.floor(anim.ellapsed - anim.first_ellapsed);
@@ -47,12 +62,12 @@ let animation = {
 
       if(anim.ellapsedFrames == 0){
         out("t6", "skipping at " + anim.frame + " because 0 frames have ellapsed.");
-        window.requestAnimationFrame(animation.animation_frame_callback(state.user, state));
+        window.requestAnimationFrame(animation.animation_frame_callback(state.user, state, limit));
         return 0;
       }
       anim.lastFrame = anim.frame;
 
-      if(anim.frame > 50){
+      if(limit && anim.frame > limit){
         return 0;
       }
 
@@ -64,14 +79,20 @@ let animation = {
 
       animation.clear();
       state.animation = anim;
-      if(!animation.isCancelled){
+      if(animation.current == state.id){
+        console.log(`animation.isCancelled: ${animation.isCancelled}`);
         let paramObj = {canvas: state.canvas,
                         context: state.context,
                         state: state.user};
         window.requestAnimationFrame(
           animation.animation_frame_callback(
             state.render(paramObj),
-            state));
+            state,
+            limit));
+      }else{
+        console.log('Animation is cancelled');
+        animation.cancelCallback();
+        animation.cancelCallback = function(){};
       }
     },
 
@@ -79,15 +100,9 @@ let animation = {
     function (){
       let c = document.getElementById("canvas1");
       let ctx = c.getContext("2d");
-      let h = c.height;
-      let w = c.width;
-      animation.clear_(ctx, w, h);
-      ctx.clearRect(0, 0, h, w);
+      let h = c.height * 2;
+      let w = c.width * 2;
+      ctx.clearRect(-(h/2), -(w/2), h, w);
       ctx.strokeStyle = "#F00";
-    },
-
-  clear_:
-    function clear_(ctx, h, w){
-      ctx.clearRect(0, 0, h, w);
     }
 }
