@@ -9,21 +9,21 @@ let animation = {
     },
 
   animate:
-    function (state, renderFun, limit){
+    function (state, renderFun, limit, shouldClear = true){
       //for(let p in state){
         //console.log(`animate: state[${p}]: ${state[p]}`);
       //}
       let id = Symbol();
       animation.current = id;
       let canvas = document.getElementById("canvas1");
-      animation.animate_({animation: {lastFrame: 0,
+      animation.animate_({animation: {last_frame: 0,
                                       ellapsed: 0,
-                                      ellapsedMillis: 0,
-                                      framesPerSecond: 30,
+                                      frames_per_second: 30,
                                       first_ellapsed: undefined},
                           render: renderFun,
                           canvas: canvas,
                           context: canvas.getContext("2d"),
+                          should_clear: shouldClear,
                           user: state,
                           id: id
                          },
@@ -55,17 +55,17 @@ let animation = {
         //console.log(`animate_: state.user[${p}]: ${state.user[p]}`);
       //}
       let anim = state.animation;
-      let millisPerFrame = 1000 / anim.framesPerSecond;
+      let millisPerFrame = 1000 / anim.frames_per_second;
       let ellapsedMillis = Math.floor(anim.ellapsed - anim.first_ellapsed);
       anim.frame = Math.floor(ellapsedMillis / millisPerFrame);
-      anim.ellapsedFrames = anim.frame - anim.lastFrame;
+      anim.ellapsedFrames = anim.frame - anim.last_frame;
 
       if(anim.ellapsedFrames == 0){
         out("t6", "skipping at " + anim.frame + " because 0 frames have ellapsed.");
         window.requestAnimationFrame(animation.animation_frame_callback(state.user, state, limit));
         return 0;
       }
-      anim.lastFrame = anim.frame;
+      anim.last_frame = anim.frame;
 
       if(limit && anim.frame > limit){
         return 0;
@@ -74,10 +74,12 @@ let animation = {
       out("t3", "frame: " + anim.frame);
       if(anim.ellapsedFrames != 1){
         out("t4", "at frame " + anim.frame + " ellapsed frames was " + anim.ellapsedFrames);
-        out("t5", "lastFrame: " + anim.lastFrame);
+        out("t5", "lastFrame: " + anim.last_frame);
       }
 
-      animation.clear();
+      if(animation.should_clear){
+        animation.clear();
+      }
       state.animation = anim;
       if(animation.current == state.id){
         console.log(`animation.isCancelled: ${animation.isCancelled}`);
