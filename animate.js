@@ -104,7 +104,7 @@ let animation = {
       let ctx = c.getContext("2d");
       let h = c.height * 2;
       let w = c.width * 2;
-      ctx.clearRect(-(h/2), -(w/2), h, w);
+      ctx.clearRect(-(h/2), -(w/2), h * 1.5, w * 1.5);
       ctx.strokeStyle = "#F00";
     }
 }
