@@ -9,7 +9,7 @@ let animation = {
     },
 
   animate:
-    function (state, renderFun, limit, shouldClear = true){
+    function (state, renderFun, limit, fps = 30, shouldClear = true){
       //for(let p in state){
         //console.log(`animate: state[${p}]: ${state[p]}`);
       //}
@@ -18,7 +18,7 @@ let animation = {
       let canvas = document.getElementById("canvas1");
       animation.animate_({animation: {last_frame: 0,
                                       ellapsed: 0,
-                                      frames_per_second: 30,
+                                      frames_per_second: fps,
                                       first_ellapsed: undefined},
                           render: renderFun,
                           canvas: canvas,
